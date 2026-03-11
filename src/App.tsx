@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 
-const API_URL = '/api/digistorms/events' // same origin → proxied by Vite, no CORS
+const API_URL = 'https://liftoff-email-craft-git-feat-ai-agent-infra-digi-storms-prod.vercel.app/api/digistorms/events'
 
 const SEQUENCE_EVENTS: { event: string; label: string }[] = [
   { event: 'user.signed_up', label: 'User Signed Up' },
