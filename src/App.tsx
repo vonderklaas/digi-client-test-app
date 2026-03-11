@@ -4,13 +4,13 @@ import './App.css'
 const API_URL = 'https://liftoff-email-craft-git-feat-ai-agent-infra-digi-storms-prod.vercel.app/api/digistorms/events'
 
 const SEQUENCE_EVENTS: { event: string; label: string }[] = [
-  { event: 'user.signed_up', label: 'User Signed Up' },
-  { event: 'milestone.1_achieved', label: 'Milestone #1 Success' },
-  { event: 'nudge.1', label: 'Nudge #1' },
-  { event: 'milestone.2_achieved', label: 'Milestone #2 Success' },
-  { event: 'nudge.2', label: 'Nudge #2' },
-  { event: 'trial.ending_24h', label: 'Trial Ending (24h Left)' },
-  { event: 'trial.ended', label: 'Trial Ended' },
+  { event: 'user.signed_up', label: 'user.signed_up' },
+  { event: 'milestone.1_achieved', label: 'milestone.1_achieved' },
+  { event: 'nudge.1', label: 'nudge.1' },
+  { event: 'milestone.2_achieved', label: 'milestone.2_achieved' },
+  { event: 'nudge.2', label: 'nudge.2' },
+  { event: 'trial.ending_24h', label: 'trial.ending_24h' },
+  { event: 'trial.ended', label: 'trial.ended' },
 ]
 
 function App() {
@@ -35,9 +35,6 @@ function App() {
 
     setStatus('loading')
     setErrorMessage('')
-
-    // add to cart()
-    // sned email to suer
 
     const uid = userId ?? `usr_${Date.now()}`
     if (!userId) setUserId(uid)
@@ -95,14 +92,14 @@ function App() {
 
   return (
     <>
-      <h1>DigiStorms Events Ingestion</h1>
-      <p className="subtitle">Send events as one user to test the full sequence.</p>
+      <h1>Digi Events Ingestion</h1>
+      {/* <p className="subtitle">Send events as one user to test the full sequence.</p> */}
       <div className="card">
         <input
           type="text"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
-          placeholder="Workspace API key"
+          placeholder="Your API Key"
           disabled={status === 'loading'}
           autoComplete="off"
         />
@@ -111,15 +108,16 @@ function App() {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="user@example.com"
+          placeholder="Your User (user@example.com)"
           disabled={status === 'loading'}
         />
+        <h3>Event Picker</h3>
         <div className="event-buttons">
           {SEQUENCE_EVENTS.map(({ event, label }) => (
             <button
               key={event}
               onClick={() => sendEvent(event)}
-              disabled={status === 'loading'}
+              disabled={status === 'loading' || !apiKey.trim() || !email.trim()}
               title={event}
             >
               {label}
