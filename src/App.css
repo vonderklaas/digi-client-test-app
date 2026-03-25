@@ -5,6 +5,53 @@
   text-align: center;
 }
 
+.btn-regenerate {
+  width: 100%;
+  max-width: 20rem;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #e8e8ef;
+  background: #3b3f5c;
+  border: 1px solid #646cff;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-regenerate:hover:not(:disabled) {
+  background: #4a4f70;
+}
+
+.btn-regenerate:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.json-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #888;
+  max-width: 24rem;
+}
+
+.json-preview {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  width: 100%;
+  max-width: 24rem;
+  text-align: left;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #c8c9d4;
+  background: #1a1b26;
+  border: 1px solid #3d3f52;
+  border-radius: 8px;
+  overflow-x: auto;
+  box-sizing: border-box;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;

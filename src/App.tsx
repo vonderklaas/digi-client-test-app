@@ -6,20 +6,38 @@ const API_URL = 'https://app.digistorms.ai/api/digistorms/events'
 const SEQUENCE_EVENTS: { event: string; label: string }[] = [
   { event: 'user.signed_up', label: 'user.signed_up' },
   { event: 'milestone.1_achieved', label: 'milestone.1_achieved' },
-  { event: 'nudge.1', label: 'nudge.1' },
   { event: 'milestone.2_achieved', label: 'milestone.2_achieved' },
-  { event: 'nudge.2', label: 'nudge.2' },
-  { event: 'trial.ending_24h', label: 'trial.ending_24h' },
-  { event: 'trial.ended', label: 'trial.ended' },
 ]
+
+function newUserId() {
+  return `usr_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`
+}
 
 function App() {
   const [apiKey, setApiKey] = useState('')
   const [email, setEmail] = useState('')
-  const [userId, setUserId] = useState<string | null>(null) // stable per session for sequence testing
+  const [userId, setUserId] = useState(() => newUserId())
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const [lastEvent, setLastEvent] = useState<string | null>(null)
+  const [lastSentBody, setLastSentBody] = useState<object | null>(null)
+
+  function buildPayload(event: string) {
+    return {
+      event,
+      userId,
+      email: email.trim(),
+      properties: {},
+    }
+  }
+
+  function regenerateUserId() {
+    setUserId(newUserId())
+    setLastEvent(null)
+    setLastSentBody(null)
+    setStatus('idle')
+    setErrorMessage('')
+  }
 
   async function sendEvent(event: string) {
     if (!apiKey.trim()) {
@@ -36,8 +54,7 @@ function App() {
     setStatus('loading')
     setErrorMessage('')
 
-    const uid = userId ?? `usr_${Date.now()}`
-    if (!userId) setUserId(uid)
+    const payload = buildPayload(event)
 
     try {
       const response = await fetch(API_URL, {
@@ -46,12 +63,7 @@ function App() {
           Authorization: `Bearer ${apiKey.trim()}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          event,
-          userId: uid,
-          email: email.trim(),
-          properties: {},
-        }),
+        body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
@@ -71,6 +83,7 @@ function App() {
       }
 
       setLastEvent(event)
+      setLastSentBody(payload)
       setStatus('success')
     } catch (err) {
       setStatus('error')
@@ -90,16 +103,22 @@ function App() {
     }
   }
 
+  const previewPayload = lastSentBody ?? {
+    event: null,
+    userId,
+    email: email.trim(),
+    properties: {},
+  }
+
   return (
     <>
-      <h1>Digi Events Ingestion</h1>
-      {/* <p className="subtitle">Send events as one user to test the full sequence.</p> */}
+      <h1>DigiStorms Client SDK</h1>
       <div className="card">
         <input
           type="text"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
-          placeholder="Your API Key"
+          placeholder="DigiStorms API Key"
           disabled={status === 'loading'}
           autoComplete="off"
         />
@@ -111,7 +130,16 @@ function App() {
           placeholder="Your User (user@example.com)"
           disabled={status === 'loading'}
         />
-        <h3>Event Picker</h3>
+        <button
+          type="button"
+          className="btn-regenerate"
+          onClick={regenerateUserId}
+          disabled={status === 'loading'}
+          title="Generate a new anonymous user id (same as a new visitor)"
+        >
+          Regenerate ID (new user)
+        </button>
+        <h2>Event Picker</h2>
         <div className="event-buttons">
           {SEQUENCE_EVENTS.map(({ event, label }) => (
             <button
@@ -124,6 +152,15 @@ function App() {
             </button>
           ))}
         </div>
+        <h2>Request body</h2>
+        <p className="json-hint">
+          {lastSentBody
+            ? 'JSON sent with the last successful request:'
+            : 'Preview: the event field is null until you send an event from the picker above.'}
+        </p>
+        <pre className="json-preview" tabIndex={0}>
+          {JSON.stringify(previewPayload, null, 2)}
+        </pre>
         {status === 'success' && (
           <p className="success">
             Event sent: <code>{lastEvent}</code>
