@@ -126,7 +126,7 @@ function App() {
 
   return (
     <>
-      <h1>DigiStorms Client SDK</h1>
+      <h1 className="app-title">DigiStorms Client SDK</h1>
       <p className="api-url-hint">
         POST target: <code>{API_URL}</code>
         {' · '}
@@ -171,26 +171,35 @@ function App() {
             </button>
           ))}
         </div>
-        <h2>Request body</h2>
-        <p className="json-hint">
-          {lastSentBody
-            ? 'JSON sent with the last successful request:'
-            : 'Preview: the event field is null until you send an event from the picker above.'}
-        </p>
-        <pre className="json-preview" tabIndex={0}>
-          {JSON.stringify(previewPayload, null, 2)}
-        </pre>
-        {lastResponse !== null && (
-          <>
-            <h2>API response</h2>
-            <p className="json-hint">Parsed JSON (or text) from the last request</p>
+        <h2 className="json-split-heading">Request · Response</h2>
+        <div className="json-split">
+          <div className="json-panel">
+            <h3 className="json-panel-title">Request body</h3>
+            <p className="json-hint">
+              {lastSentBody
+                ? 'Last sent JSON:'
+                : 'Preview (event is null until you send):'}
+            </p>
             <pre className="json-preview" tabIndex={0}>
-              {typeof lastResponse === 'string'
-                ? lastResponse
-                : JSON.stringify(lastResponse, null, 2)}
+              {JSON.stringify(previewPayload, null, 2)}
             </pre>
-          </>
-        )}
+          </div>
+          <div className="json-panel">
+            <h3 className="json-panel-title">API response</h3>
+            <p className="json-hint">
+              {lastResponse !== null
+                ? 'Parsed JSON or text from the last request:'
+                : 'No response yet.'}
+            </p>
+            <pre className="json-preview json-preview--response" tabIndex={0}>
+              {lastResponse !== null
+                ? typeof lastResponse === 'string'
+                  ? lastResponse
+                  : JSON.stringify(lastResponse, null, 2)
+                : '—'}
+            </pre>
+          </div>
+        </div>
         {status === 'success' && (
           <p className="success">
             Event sent: <code>{lastEvent}</code>
