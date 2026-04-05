@@ -144,3 +144,18 @@
 .read-the-docs {
   color: #888;
 }
+
+
+.api-url-hint {
+  font-size: 0.8rem;
+  color: #888;
+  max-width: 36rem;
+  margin: -0.5rem auto 1.25rem;
+  line-height: 1.4;
+}
+
+.api-url-hint code {
+  font-size: 0.75rem;
+  word-break: break-all;
+}
+

@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import './App.css'
 
-const API_URL = 'https://app.digistorms.ai/api/digistorms/events'
+const API_URL =
+  import.meta.env.VITE_EVENTS_API_URL ?? 'https://app.digistorms.ai/api/digistorms/events'
 
 const SEQUENCE_EVENTS: { event: string; label: string }[] = [
   { event: 'user.signed_up', label: 'user.signed_up' },
   { event: 'milestone.1_achieved', label: 'milestone.1_achieved' },
   { event: 'milestone.2_achieved', label: 'milestone.2_achieved' },
+  { event: 'user.upgraded', label: 'user.upgraded (stop emails)' },
 ]
 
 function newUserId() {
@@ -21,6 +23,7 @@ function App() {
   const [errorMessage, setErrorMessage] = useState('')
   const [lastEvent, setLastEvent] = useState<string | null>(null)
   const [lastSentBody, setLastSentBody] = useState<object | null>(null)
+  const [lastResponse, setLastResponse] = useState<unknown>(null)
 
   function buildPayload(event: string) {
     return {
@@ -35,6 +38,7 @@ function App() {
     setUserId(newUserId())
     setLastEvent(null)
     setLastSentBody(null)
+    setLastResponse(null)
     setStatus('idle')
     setErrorMessage('')
   }
@@ -53,6 +57,7 @@ function App() {
 
     setStatus('loading')
     setErrorMessage('')
+    setLastResponse(null)
 
     const payload = buildPayload(event)
 
@@ -66,25 +71,33 @@ function App() {
         body: JSON.stringify(payload),
       })
 
+      const text = await response.text()
+      let parsed: unknown = null
+      try {
+        parsed = text ? JSON.parse(text) : null
+      } catch {
+        parsed = text
+      }
+
       if (!response.ok) {
         let message = `Request failed (${response.status})`
-        try {
-          const text = await response.text()
-          const parsed = text ? JSON.parse(text) : null
-          if (parsed?.message) message = parsed.message
-          else if (parsed?.error) message = parsed.error
-          else if (text) message = text
-        } catch {
-          // ignore parse errors, use default message
-        }
+        if (parsed && typeof parsed === 'object' && parsed !== null) {
+          const o = parsed as Record<string, unknown>
+          if (typeof o.message === 'string') message = o.message
+          else if (typeof o.error === 'string') message = o.error
+        } else if (typeof parsed === 'string' && parsed) message = parsed
         setErrorMessage(message)
         setStatus('error')
+        setLastResponse(parsed)
+        console.error('[DigiStorms SDK]', response.status, parsed)
         return
       }
 
       setLastEvent(event)
       setLastSentBody(payload)
+      setLastResponse(parsed ?? { ok: response.ok })
       setStatus('success')
+      console.log('[DigiStorms SDK] success', { event, response: parsed })
     } catch (err) {
       setStatus('error')
       const msg = err instanceof Error ? err.message : ''
@@ -100,6 +113,7 @@ function App() {
       } else {
         setErrorMessage(msg || 'Request failed')
       }
+      setLastResponse(null)
     }
   }
 
@@ -113,6 +127,11 @@ function App() {
   return (
     <>
       <h1>DigiStorms Client SDK</h1>
+      <p className="api-url-hint">
+        POST target: <code>{API_URL}</code>
+        {' · '}
+        Override with <code>VITE_EVENTS_API_URL</code> in <code>.env</code>
+      </p>
       <div className="card">
         <input
           type="text"
@@ -161,6 +180,17 @@ function App() {
         <pre className="json-preview" tabIndex={0}>
           {JSON.stringify(previewPayload, null, 2)}
         </pre>
+        {lastResponse !== null && (
+          <>
+            <h2>API response</h2>
+            <p className="json-hint">Parsed JSON (or text) from the last request</p>
+            <pre className="json-preview" tabIndex={0}>
+              {typeof lastResponse === 'string'
+                ? lastResponse
+                : JSON.stringify(lastResponse, null, 2)}
+            </pre>
+          </>
+        )}
         {status === 'success' && (
           <p className="success">
             Event sent: <code>{lastEvent}</code>
